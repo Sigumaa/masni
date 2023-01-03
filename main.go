@@ -7,94 +7,7 @@ import (
 	"strings"
 )
 
-var s = bufio.NewScanner(os.Stdin)
-
-func main() {
-	for {
-		fmt.Print("\nテキストを変換するなら1、にーを変換するなら2を入力してください > ")
-		s.Scan()
-		input := s.Text()
-		if input == "1" {
-			fmt.Print("input > ")
-			s.Scan()
-			text := s.Text()
-			morse, err := TextToMorse(text)
-			if err != nil {
-				fmt.Println(err)
-			}
-			ni, err := MorseToNI(morse)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println("output >", ni)
-		} else if input == "2" {
-			fmt.Print("input >")
-			s.Scan()
-			ni := s.Text()
-			morse, err := NIToMorse(ni)
-			if err != nil {
-				fmt.Println(err)
-			}
-			text, err := MorseToText(morse)
-			if err != nil {
-				fmt.Println(err)
-			}
-			fmt.Println("output >", text)
-		} else {
-			fmt.Println("1か2を入力してください")
-		}
-	}
-}
-
-func TextToMorse(text string) (string, error) {
-	morseCode := map[rune]string{
-		'あ': "－－・－－",
-		'い': "・－",
-		'う': "・・－",
-		'え': "－・－－－",
-		'お': "・－・・・",
-		'か': "・－・・",
-		'き': "－・－・・",
-		'く': "・・・－",
-		'け': "－・－－",
-		'こ': "－－－－",
-		'さ': "－・－・－",
-		'し': "－－・－・",
-		'す': "－－－・－",
-		'せ': "・－－－・",
-		'そ': "－－－・",
-		'た': "－・",
-		'ち': "・・－・",
-		'つ': "・－－・",
-		'て': "・－・－－",
-		'と': "・・－・・",
-		'な': "・－・",
-		'に': "－・－・",
-		'ぬ': "・・・・",
-		'ね': "－－・－",
-		'の': "・・－－",
-		'は': "－・・・",
-		'ひ': "－－・・－",
-		'ふ': "－－・・",
-		'へ': "・",
-		'ほ': "－・・",
-		'ま': "－・・－",
-		'み': "・・－・－",
-		'む': "－",
-		'め': "－・・・－",
-		'も': "－・・－・",
-		'や': "・－－",
-		'ゆ': "－・・－－",
-		'よ': "－－",
-		'ら': "・・・",
-		'り': "－－・",
-		'る': "－・－－・",
-		'れ': "－－－",
-		'ろ': "・－・－",
-		'わ': "－・－",
-		'を': "・－－－",
-		'ん': "・－・－・",
-	}
+func TextToMorse(text string, morseCode map[rune]string) (string, error) {
 
 	runes := []rune(text)
 	result := ""
@@ -145,7 +58,23 @@ func NIToMorse(ni string) (string, error) {
 	return result, nil
 }
 
-func MorseToText(morse string) (string, error) {
+func MorseToText(morse string, morseCode map[rune]string) (string, error) {
+	result := ""
+	word := strings.Split(morse, " ")
+	for _, w := range word {
+		for hiragana, m := range morseCode {
+			if m == w {
+				result += string(hiragana)
+				break
+			}
+		}
+	}
+	return result, nil
+}
+
+var s = bufio.NewScanner(os.Stdin)
+
+func main() {
 	morseCode := map[rune]string{
 		'あ': "－－・－－",
 		'い': "・－",
@@ -194,15 +123,48 @@ func MorseToText(morse string) (string, error) {
 		'を': "・－－－",
 		'ん': "・－・－・",
 	}
-	result := ""
-	word := strings.Split(morse, " ")
-	for _, w := range word {
-		for hiragana, m := range morseCode {
-			if m == w {
-				result += string(hiragana)
-				break
-			}
+	for {
+		fmt.Print("\nテキストを変換するなら1、にーを変換するなら2を入力してください > ")
+		s.Scan()
+		input := s.Text()
+
+		if input != "1" && input != "2" {
+			fmt.Println("1か2を入力してください")
+			continue
 		}
+
+		fmt.Print("input > ")
+		s.Scan()
+		text := s.Text()
+		var output string
+		if input == "1" {
+			result, err := TextToMorse(text, morseCode)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			result, err = MorseToNI(result)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			output = result
+		} else {
+			result, err := NIToMorse(text)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			result, err = MorseToText(result, morseCode)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			output = result
+		}
+
+		fmt.Println("output >", output)
 	}
-	return result, nil
 }
